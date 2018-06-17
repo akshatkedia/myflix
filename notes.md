@@ -245,3 +245,135 @@ code inside of the method won't be executed when the method is defined, but when
 it is called. Also, the memoization pattern ensures that whatever inside of a
 `let` block is only computed / executed once - when it's called again it just
 simply return he value stored in the `@foo` instance var, in the example above.
+
+# Transactions
+
+A transaction acts on a single database connection. If you have multiple class
+-specific databases, the transaction will not protect interaction among them.
+
+We use transactions as a protective wrapper around SQL statements to ensure
+changes to the database only occur when all actions succeed together.
+Transactions help the developer enforce data integrity within the application.
+
+```rb
+ActiveRecord::Base.transaction do
+  david.withdraw(100)
+  mary.deposit(100)
+end
+```
+
+In Rails transactions are available as class and instance methods for all
+ActiveRecord models. It is perfectly fine to mix model types inside a single
+transaction block. This is because the transaction is bound to the database
+connection not the model instance. Rails already wraps the #save and #destroy
+methods in a single transaction, therefore a transaction is never needed when
+updating a single record.
+
+Transactions reset the state of records through a process called rollback. In
+Rails, rollbacks are only triggered by an exception.
+
+```rb
+ActiveRecord::Base.transaction do
+  david.update_attribute(:amount, david.amount - 100)
+  mary.update_attribute(:amount, 100)
+end
+```
+
+In Rails, #update_attribute is designed not to throw an exception when an update
+fails. It returns false, and for this reason you should ensure that the methods
+used throw an exception upon failure. A better way to write the previous example
+would be:
+
+```rb
+ActiveRecord::Base.transaction do
+  david.update_attributes!(:amount => -100)
+  mary.update_attributes!(:amount => 100)
+end
+```
+
+The bang modifier (!) is a Rails convention for a method which will throw an
+exception upon failure.
+
+By design magic finders will return nil when no record is returned. This is in
+contrast to the normal #find_ method which throws an
+ActiveRecord::RecordNotFound exception.
+
+```rb
+ActiveRecord::Base.transaction do
+  david = User.find_by_name("david")
+  if david.id != john.id
+    john.update_attributes!(:amoount => -100)
+    mary.update_attributes!(:amoount => 100)
+  end
+end
+```
+
+```rb
+ActiveRecord::Base.transaction do
+  david = User.find_by_name("david")
+  raise ActiveRecord::RecordNotFound if david.nil?
+  if david.id != john.id
+    john.update_attributes!(:amoount => -100)
+    mary.update_attributes!(:amoount => 100)
+  end
+end
+```
+
+When the exception occurs it will be raised outside of the transaction block
+after the rollback is completed. Your application code must be ready to catch
+this exception as it bubbles up through the application stack.
+
+It is also possible to invalidate a transaction without raising an exception
+that will propagate upwards by using ActiveRecord::Rollback. This special
+exception allows you to invalidate a transaction and reset the database records
+without needing to rescue elsewhere in your code.
+
+ActiveRecord::Rollback does not propagate outside of the containing transaction
+block and so the parent transaction does not receive the exception nested inside
+the child. Since the contents of the child transaction are lumped into the
+parent transaction both records are created!
+
+To ensure a rollback is received by the parent transaction you must add the
+`:requires_new => true` option to the child transaction.
+
+A transaction only acts upon the current database connection. If your
+application writes to multiple databases at once you will need to wrap the
+method inside a nested transaction.
+
+```rb
+Client.transaction do
+  Product.transaction do
+    product.buy(@quantity)
+    client.update_attributes!(:sales_count => @sales_count + 1)
+  end
+end
+```
+
+`#save` and `#destroy` are wrapped inside a transaction. This means that
+callbacks like `#after_save` is still part of the active transaction which might
+still be rolled back! Therefore if you want code to execute that is
+guaranteed to execute outside of the transaction use one of the transaction
+specific callbacks like `#after_commit` or `#after_rollback`
+
+# Acceptance Tests at a Single Level of Abstraction
+
+Acceptance test: a logical progression through a task within an application.
+
+At the heart of understanding the story being told is a consistent, single level
+of abstraction, that is, each piece of behavior is roughly similar in terms
+of functionality extracted and its overall purpose.
+
+By extracting behavior to well-named methods, the developer can better tell the
+story of each scenario by describing behaviors consistently and at a high enough
+level that others will understand the goal and outcomes of the rest.
+
+# Four-Phase Test
+
+```rb
+test do
+  setup
+  exercise
+  verify
+  teardown
+end
+```
