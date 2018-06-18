@@ -11,7 +11,8 @@ gem 'uglifier'
 gem 'jquery-rails'
 gem 'pg'
 gem 'bcrypt'
-
+gem 'sidekiq'
+gem 'puma'
 
 group :development do
   gem 'thin'
