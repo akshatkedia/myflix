@@ -1,0 +1,70 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://api.stripe.com/v1/customers
+    body:
+      encoding: UTF-8
+      string: source=tok_1CizZaAma8RRGxBX93vr1JQ4&email=john%40example.com&plan=plan_D9HPPgRVT7nM5V
+    headers:
+      User-Agent:
+      - Stripe/v1 RubyBindings/3.15.0
+      Authorization:
+      - Bearer sk_test_koErhJfyKCLRnGI5QB69x7zc
+      Content-Type:
+      - application/x-www-form-urlencoded
+      X-Stripe-Client-User-Agent:
+      - '{"bindings_version":"3.15.0","lang":"ruby","lang_version":"2.5.0 p0 (2017-12-25)","platform":"x86_64-darwin17","engine":"ruby","publisher":"stripe","uname":"Darwin
+        Akshats-MacBook-Pro.local 17.6.0 Darwin Kernel Version 17.6.0: Tue May  8
+        15:22:16 PDT 2018; root:xnu-4570.61.1~1/RELEASE_X86_64 x86_64","hostname":"Akshats-MacBook-Pro.local"}'
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+  response:
+    status:
+      code: 402
+      message: Payment Required
+    headers:
+      Server:
+      - nginx
+      Date:
+      - Sun, 01 Jul 2018 07:02:18 GMT
+      Content-Type:
+      - application/json
+      Content-Length:
+      - '241'
+      Connection:
+      - keep-alive
+      Access-Control-Allow-Credentials:
+      - 'true'
+      Access-Control-Allow-Methods:
+      - GET, POST, HEAD, OPTIONS, DELETE
+      Access-Control-Allow-Origin:
+      - "*"
+      Access-Control-Expose-Headers:
+      - Request-Id, Stripe-Manage-Version, X-Stripe-External-Auth-Required, X-Stripe-Privileged-Session-Required
+      Access-Control-Max-Age:
+      - '300'
+      Cache-Control:
+      - no-cache, no-store
+      Request-Id:
+      - req_DAF7PdA2S1V7lz
+      Stripe-Version:
+      - '2018-05-21'
+    body:
+      encoding: UTF-8
+      string: |
+        {
+          "error": {
+            "code": "card_declined",
+            "decline_code": "generic_decline",
+            "doc_url": "https://stripe.com/docs/error-codes/card-declined",
+            "message": "Your card was declined.",
+            "param": "",
+            "type": "card_error"
+          }
+        }
+    http_version: 
+  recorded_at: Sun, 01 Jul 2018 07:02:18 GMT
+recorded_with: VCR 2.9.3

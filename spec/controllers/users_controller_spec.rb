@@ -1,8 +1,6 @@
 require 'spec_helper'
 require 'sidekiq/testing'
 
-Sidekiq::Testing.inline!
-
 describe UsersController do
   describe 'GET new' do
     it 'sets @user' do
@@ -12,83 +10,28 @@ describe UsersController do
   end
 
   describe 'POST create' do
-    context 'with valid input' do
-      before do
-        post :create, params: { user: Fabricate.attributes_for(:user) }
-      end
-
-      it 'creates the user' do
-        expect(User.count).to eq(1)
-      end
-
+    context 'successful user sign up' do
       it 'redirects to the sign in page' do
+        result = double(:sign_up_result, successful?: true)
+        expect_any_instance_of(UserSignup).to receive(:sign_up).and_return(result)
+        post :create, params: { user: Fabricate.attributes_for(:user) }
         expect(response).to redirect_to sign_in_path
-      end
-
-      it "makes the user follow the inviter" do
-        alice = Fabricate(:user)
-        invitation = Fabricate(:invitation, inviter: alice, recipient_email: 'joe@example.com')
-        post :create, params: { user: { email: 'joe@example.com',
-          password: 'password', full_name: 'Joe Doe' },
-          invitation_token: invitation.token }
-        joe = User.where(email: 'joe@example.com').first
-        expect(joe.follows?(alice)).to be true
-      end
-
-      it "makes the inviter follow the user" do
-        alice = Fabricate(:user)
-        invitation = Fabricate(:invitation, inviter: alice, recipient_email: 'joe@example.com')
-        post :create, params: { user: { email: 'joe@example.com',
-          password: 'password', full_name: 'Joe Doe' },
-          invitation_token: invitation.token }
-        joe = User.where(email: 'joe@example.com').first
-        expect(alice.follows?(joe)).to be true
-      end
-
-      it "expires the invitation upon acceptance" do
-        alice = Fabricate(:user)
-        invitation = Fabricate(:invitation, inviter: alice, recipient_email: 'joe@example.com')
-        post :create, params: { user: { email: 'joe@example.com',
-          password: 'password', full_name: 'Joe Doe' },
-          invitation_token: invitation.token }
-        expect(Invitation.first.token).to be_nil
       end
     end
 
-    context 'with invalid input' do
-      before do
-        post :create, params: { user: { email: 'akshat@example.com', password: 'password' } }
-      end
-
-      it 'does not create the user' do
-        expect(User.count).to eq(0)
-      end
-
-      it 'render the :new template' do
+    context "failed user sign up" do
+      it "renders the new template" do
+        result = double(:sign_up_result, successful?: false, error_message: "This is an error message")
+        expect_any_instance_of(UserSignup).to receive(:sign_up).and_return(result)
+        post :create, params: { user: Fabricate.attributes_for(:user), stripeToken: '123453' }
         expect(response).to render_template :new
       end
 
-      it 'sets @user' do
-        expect(assigns(:user)).to be_instance_of(User)
-      end
-    end
-
-    context 'sending emails' do
-      after { ActionMailer::Base.deliveries.clear }
-
-      it "sends out email to the user with valid inputs" do
-        post :create, params: { user: { email: "joe@example.com", password: "password", full_name: "Joe Doe" } }
-        expect(ActionMailer::Base.deliveries.last.to).to eq(["joe@example.com"])
-      end
-
-      it "sends out email containing the user's name with valid inputs" do
-        post :create, params: { user: { email: "joe@example.com", password: "password", full_name: "Joe Doe" } }
-        expect(ActionMailer::Base.deliveries.last.body).to include("Joe Doe")
-      end
-
-      it "does not send out email with invalid inputs" do
-        post :create, params: { user: { email: "joe@example.com" } }
-        expect(ActionMailer::Base.deliveries).to be_empty
+      it "sets the flash error message" do
+        result = double(:sign_up_result, successful?: false, error_message: "This is an error message")
+        expect_any_instance_of(UserSignup).to receive(:sign_up).and_return(result)
+        post :create, params: { user: Fabricate.attributes_for(:user), stripeToken: '123453' }
+        expect(flash[:danger]).to be_present
       end
     end
   end

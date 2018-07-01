@@ -17,6 +17,10 @@ Myflix::Application.routes.draw do
     resources :reviews, only: [:create]
   end
 
+  namespace :admin do
+    resources :videos, only: [:new, :create]
+  end
+
   resources :categories, only: [:show]
 
   get 'my_queue', to: 'queue_items#index'
@@ -42,4 +46,6 @@ Myflix::Application.routes.draw do
   resources :password_resets, only: [:show, :create]
 
   resources :invitations, only: [:new, :create]
+
+  mount StripeEvent::Engine, at: '/stripe_events'
 end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_06_16_113617) do
+ActiveRecord::Schema.define(version: 2018_07_01_103533) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -29,6 +29,12 @@ ActiveRecord::Schema.define(version: 2018_06_16_113617) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "token"
+  end
+
+  create_table "payments", force: :cascade do |t|
+    t.integer "user_id"
+    t.integer "amount"
+    t.string "reference_id"
   end
 
   create_table "queue_items", force: :cascade do |t|
@@ -62,16 +68,19 @@ ActiveRecord::Schema.define(version: 2018_06_16_113617) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "token"
+    t.boolean "admin"
+    t.string "customer_token"
   end
 
   create_table "videos", force: :cascade do |t|
     t.string "title"
     t.text "description"
-    t.string "small_cover_url"
-    t.string "large_cover_url"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "category_id"
+    t.string "large_cover"
+    t.string "small_cover"
+    t.string "video_url"
     t.index ["category_id"], name: "index_videos_on_category_id"
   end
 

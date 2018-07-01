@@ -13,6 +13,13 @@ gem 'pg'
 gem 'bcrypt'
 gem 'sidekiq'
 gem 'puma'
+gem 'sentry-raven'
+gem 'carrierwave'
+gem 'mini_magick'
+gem 'stripe'
+gem 'stripe_event', '~> 1.1'
+gem 'figaro'
+gem 'draper'
 
 group :development do
   gem 'thin'
@@ -31,12 +38,14 @@ group :development, :test do
 end
 
 group :test do
-  gem 'database_cleaner', '1.4.1'
+  gem 'database_cleaner', '1.6.0'
   gem 'shoulda-matchers', '2.7.0'
   gem 'vcr', '2.9.3'
   gem 'capybara'
   gem 'launchy'
   gem 'capybara-email'
+  gem 'webmock'
+  gem 'selenium-webdriver'
 end
 
 group :production do

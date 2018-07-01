@@ -1,8 +1,6 @@
 require 'rails_helper'
 require 'sidekiq/testing'
 
-Sidekiq::Testing.inline!
-
 RSpec.describe InvitationsController, type: :controller do
   describe "GET new" do
     it "sets @invitation to a new invitation" do
@@ -23,8 +21,10 @@ RSpec.describe InvitationsController, type: :controller do
     end
 
     context "with valid input" do
-      after { ActionMailer::Base.deliveries.clear }
-
+      after do
+        ActionMailer::Base.deliveries.clear
+      end
+      
       it "redirects to the invitation new page" do
         set_current_user
         post :create, params: { invitation: { recipient_name: "Joe Smith",
